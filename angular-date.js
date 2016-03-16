@@ -106,7 +106,7 @@ angular.module('ngDate', [])
   // similar to past day, but will always return a future date.
   this.pastDay = function (day, now) {
     var nnow = this.nearestDay(day, now);
-    if(nnow > this.now(now)) {
+    if(nnow >= this.now(now)) {
       nnow.setDate(nnow.getDate() - 7);
     }
     return nnow;
