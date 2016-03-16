@@ -343,4 +343,122 @@ angular.module('ngDate', [])
       return fn.call(a) === fn.call(b);
     });
   };
+})
+.filter('duration', function () {
+  var
+  defaultOpts = {
+    week:           'week',
+    weeks:          'weeks',
+    day:            'day',
+    days:           'days',
+    hour:           'hour',
+    hours:          'hours',
+    minute:         'minute',
+    minutes:        'minutes',
+    second:         'second',
+    seconds:        'seconds',
+    millisecond:    'ms',
+    milliseconds:   'ms',
+    delimiter:      ' ',
+    delimiterLabel: ' ',
+    showZero:       false
+  },
+  durations = [
+    { property: 'week', ms: 604800000 },
+    { property: 'day',  ms: 86400000 },
+    { property: 'hour', ms: 3600000 },
+    { property: 'min',  ms: 60000 },
+    { property: 'sec',  ms: 1000 },
+    { property: 'ms',   ms: 1 }
+  ],
+  pluralize = function (n, singular, plural) {
+    return n === 1 ? singular : plural;
+  },
+  calcDuration = function (ms) {
+    if(!angular.isNumber(ms)) {
+      return false;
+    }
+    else if(ms === 0) {
+      return { ms: ms };
+    }
+
+    var
+    f = 0,
+    o = {};
+
+    if(ms < 0) {
+      o.past = true;
+    }
+
+    ms = Math.abs(ms);
+
+    return durations.reduce(function (p, c) {
+      if(c.ms > ms && f === 0) {
+        return p;
+      }
+
+      var n = Math.floor(ms / c.ms);
+      if(n > 0) {
+        ms -= n * c.ms;
+      }
+
+      p[c.property] = n;
+      f++;
+      return p;
+    }, o);
+  },
+  formatLabel = function (val, property, opts) {
+    var label;
+
+    switch(property) {
+      case 'week':
+        label = pluralize(val, opts.week, opts.weeks);
+        break;
+      case 'day':
+        label = pluralize(val, opts.day, opts.days);
+        break;
+      case 'hour':
+        label = pluralize(val, opts.hour, opts.hours);
+        break;
+      case 'min':
+        label = pluralize(val, opts.minute, opts.minutes);
+        break;
+      case 'sec':
+        label = pluralize(val, opts.second, opts.seconds);
+        break;
+      case 'ms':
+        label = pluralize(val, opts.millisecond, opts.milliseconds);
+        break;
+      default:
+        return '';
+    }
+
+    return String(val) + opts.delimiterLabel + label;
+  };
+
+  return function (ms, opts) {
+    var
+    o = angular.extend({}, defaultOpts, opts),
+    dur = calcDuration(ms);
+
+    if(!dur) {
+      return '---';
+    }
+    else if(ms === 0) {
+      return formatLabel(ms, 'ms', o);
+    }
+
+    return (dur.past ? '- ' : '') + durations.reduce(function (p, c) {
+      if(!dur.hasOwnProperty(c.property)) return p;
+
+      var
+      val     = dur[c.property]||0,
+      include = (val > 0);
+
+      if(!include) include = (p.length > 0 && o.showZero);
+      if(include) p.push(formatLabel(val, c.property, o));
+
+      return p;
+    }, []).join(o.delimiter);
+  };
 });
