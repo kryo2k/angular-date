@@ -210,7 +210,7 @@ angular.module('ngDate', [])
     weekNo = Math.ceil((((now.getTime() - yearStart.getTime()) / unitMs.day) + 1) / 7);
 
     // Return array of year and week number
-    return [now.getFullYear(), weekNo, now, new Date(now.getTime() + (unitMs.week - 1))];
+    return [now.getFullYear(), weekNo, this.startOf(now,'day'), this.endOf(now.getTime() + (unitMs.week - 1), 'day')];
   };
 
   // round a date to the nearest precision (year, month, day, hour, min, sec, ms) [default: ms]
