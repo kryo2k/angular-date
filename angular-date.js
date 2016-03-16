@@ -375,7 +375,7 @@ angular.module('ngDate', [])
     return n === 1 ? singular : plural;
   },
   calcDuration = function (ms) {
-    if(!angular.isNumber(ms)) {
+    if(!angular.isNumber(ms) || isNaN(ms) || !isFinite(ms)) {
       return false;
     }
     else if(ms === 0) {
