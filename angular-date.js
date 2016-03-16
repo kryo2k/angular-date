@@ -112,6 +112,13 @@ angular.module('ngDate', [])
     return nnow;
   };
 
+  // gets the day of the week (1 - 7)
+  this.dayOfWeek = function (now, beginningOfWeek) {
+    now = this.ms(now);
+    var yw = this.getYearWeek(now, beginningOfWeek);
+    return Math.ceil((now - yw[2].getTime()) / unitMs.day);
+  };
+
   // get the current day of the year
   this.dayOfYear = function (now) {
     now = this.now(now);
