@@ -1,0 +1,25 @@
+{
+  "name": "angular-date",
+  "main": "angular-date.js",
+  "homepage": "https://github.com/kryo2k/angular-date",
+  "authors": [
+    "Hans Doller <kryo2k@gmail.com>"
+  ],
+  "description": "",
+  "moduleType": [],
+  "keywords": [
+    "Date",
+    "manipulation",
+    "in",
+    "angular",
+    "1.x"
+  ],
+  "license": "GPL",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
