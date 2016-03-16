@@ -36,6 +36,20 @@ angular.module('ngDate', [])
   this.FRIDAY    = 5;
   this.SATURDAY  = 6;
 
+  // MONTHS OF YEAR
+  this.JANUARY   = 0;
+  this.FEBRUARY  = 1;
+  this.MARCH     = 2;
+  this.APRIL     = 3;
+  this.MAY       = 4;
+  this.JUNE      = 5;
+  this.JULY      = 6;
+  this.AUGUST    = 7;
+  this.SEPTEMBER = 8;
+  this.OCTOBER   = 9;
+  this.NOVEMBER  = 10;
+  this.DECEMBER  = 11;
+
   // same as now(), but returns milliseconds.
   this.ms = function (now) {
     var ms = Date.now();
@@ -112,7 +126,7 @@ angular.module('ngDate', [])
 
   // get the first of the year
   this.firstOfYear = function (year, utc) {
-    year = angular.isNumber(year)?year : (new Date()).getFullYear();
+    year = angular.isNumber(year) ? year : (new Date()).getFullYear();
     if(utc) {
       return new Date(Date.UTC(year, this.JANUARY, 1, 0, 0, 0, 0));
     }
@@ -122,9 +136,9 @@ angular.module('ngDate', [])
   // get the last day of the year
   this.lastOfYear = function (year, utc) {
     if(utc) {
-      return new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999));
+      return new Date(Date.UTC(year, this.DECEMBER, 31, 23, 59, 59, 999));
     }
-    return new Date(year, 11, 31, 23, 59, 59, 999);
+    return new Date(year, this.DECEMBER, 31, 23, 59, 59, 999);
   };
 
   // calculate the number of days in a year
