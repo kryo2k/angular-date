@@ -347,21 +347,46 @@ angular.module('ngDate', [])
 .filter('duration', function () {
   var
   defaultOpts = {
-    week:           'week',
-    weeks:          'weeks',
-    day:            'day',
-    days:           'days',
-    hour:           'hour',
-    hours:          'hours',
-    minute:         'minute',
-    minutes:        'minutes',
-    second:         'second',
-    seconds:        'seconds',
-    millisecond:    'ms',
-    milliseconds:   'ms',
-    delimiter:      ' ',
-    delimiterLabel: ' ',
-    showZero:       false
+    week:               'week',
+    weeks:              'weeks',
+    day:                'day',
+    days:               'days',
+    hour:               'hour',
+    hours:              'hours',
+    minute:             'minute',
+    minutes:            'minutes',
+    second:             'second',
+    seconds:            'seconds',
+    millisecond:        'ms',
+    milliseconds:       'ms',
+    nullLabel:          '---',
+    pastPrefix:         '(',
+    pastSuffix:         ')',
+    delimiter:          ' ',
+    delimiterCaption:   ' ',
+    showWeek:           'auto',
+    showDay:            'auto',
+    showHr:             'auto',
+    showMin:            'auto',
+    showSec:            'auto',
+    showMs:             'auto',
+    html:               false,
+    tagWrapper:         false,
+    tagLabelWrapper:    false,
+    tagCount:           'em',
+    tagCaption:         'small',
+    classPast:          'past-date',
+    classCount:         false,
+    classCaption:       false,
+    classLabelWrapper:  false,
+    precise:            false,
+    showZeroLead:       false,
+    showZeroTrail:      false,
+    showZeroMs:         true,
+    inputAsSec:         false,
+    inputAsMin:         false,
+    inputAsHr:          false,
+    inputAsDay:         false
   },
   durations = [
     { property: 'week', ms: 604800000 },
@@ -371,10 +396,20 @@ angular.module('ngDate', [])
     { property: 'sec',  ms: 1000 },
     { property: 'ms',   ms: 1 }
   ],
+  isBoolean = function (v) {
+    return (typeof v === 'boolean');
+  },
+  isAuto = function (v) {
+    return v === 'auto';
+  },
   pluralize = function (n, singular, plural) {
     return n === 1 ? singular : plural;
   },
-  calcDuration = function (ms) {
+  htmlTag = function (tag, inner, cls) {
+    if(!tag && !cls) return inner; else if(!!cls && !tag) tag = 'span';
+    return '<' + tag + (!!cls ? ' class="'+cls+'"' : '') + '>' + inner + '</' + tag + '>';
+  },
+  calcDuration = function (ms, opts) {
     if(!angular.isNumber(ms) || isNaN(ms) || !isFinite(ms)) {
       return false;
     }
@@ -382,9 +417,20 @@ angular.module('ngDate', [])
       return { ms: ms };
     }
 
-    var
-    f = 0,
-    o = {};
+    if(opts.inputAsSec) {
+      ms *= 1000;
+    }
+    else if(opts.inputAsMin) {
+      ms *= 60000;
+    }
+    else if(opts.inputAsHr) {
+      ms *= 3600000;
+    }
+    else if(opts.inputAsDay) {
+      ms *= 8.64e7;
+    }
+
+    var o = {};
 
     if(ms < 0) {
       o.past = true;
@@ -393,7 +439,8 @@ angular.module('ngDate', [])
     ms = Math.abs(ms);
 
     return durations.reduce(function (p, c) {
-      if(c.ms > ms && f === 0) {
+      if(c.ms > ms) {
+        p[c.property] = 0;
         return p;
       }
 
@@ -403,62 +450,131 @@ angular.module('ngDate', [])
       }
 
       p[c.property] = n;
-      f++;
       return p;
     }, o);
   },
   formatLabel = function (val, property, opts) {
-    var label;
+    var caption, delim = opts.delimiterCaption;
 
     switch(property) {
       case 'week':
-        label = pluralize(val, opts.week, opts.weeks);
+        caption = pluralize(val, opts.week, opts.weeks);
         break;
       case 'day':
-        label = pluralize(val, opts.day, opts.days);
+        caption = pluralize(val, opts.day, opts.days);
         break;
       case 'hour':
-        label = pluralize(val, opts.hour, opts.hours);
+        caption = pluralize(val, opts.hour, opts.hours);
         break;
       case 'min':
-        label = pluralize(val, opts.minute, opts.minutes);
+        caption = pluralize(val, opts.minute, opts.minutes);
         break;
       case 'sec':
-        label = pluralize(val, opts.second, opts.seconds);
+        caption = pluralize(val, opts.second, opts.seconds);
         break;
       case 'ms':
-        label = pluralize(val, opts.millisecond, opts.milliseconds);
+        caption = pluralize(val, opts.millisecond, opts.milliseconds);
         break;
       default:
-        return '';
+        return false;
     }
 
-    return String(val) + opts.delimiterLabel + label;
+    if(opts.html) {
+      return htmlTag(opts.tagLabelWrapper,
+        htmlTag(opts.tagCount, val, opts.classCount) + delim +
+        htmlTag(opts.tagCaption, caption, opts.classCaption),
+      opts.classLabelWrapper);
+    }
+
+    return String(val) + delim + caption;
+  },
+  concatLabel = function (to, val, property, totalMs, opts) {
+    var formatted = formatLabel(val, property, opts);
+    if(!formatted) return to;
+
+    var
+    mspday = 8.64e7, msphr = 3600000,
+    mspmin = 60000,  mspsec = 1000,
+    toLen         = to.length,
+    showZeroLead  = !!opts.showZeroLead,
+    showZeroTrail = !!opts.showZeroTrail,
+    show = false,
+    autoValue = function (ums, lowerLim, upperLim) {
+      lowerLim = (angular.isNumber(lowerLim) && lowerLim >= 0)
+        ? lowerLim
+        : 0;
+      upperLim = (angular.isNumber(upperLim) && !isNaN(upperLim) && isFinite(upperLim))
+        ? upperLim
+        : Infinity;
+
+      var
+      abs = Math.abs(totalMs),
+      A = opts.precise ? (val > 0) : (val > 0 && abs >= lowerLim && abs <= upperLim);
+
+      if(val === 0) {
+        if(showZeroLead && abs <= ums) A = true;
+        else if(showZeroTrail && abs >= ums) A = true;
+      }
+
+      return A;
+    };
+
+    switch(property) {
+      case 'week':
+      show = isAuto(opts.showWeek) ? autoValue(mspday * 7, 0, Infinity) : opts.showWeek;
+      break;
+      case 'day':
+      show = isAuto(opts.showDay)  ? autoValue(mspday, 0, mspday * 30) : opts.showDay;
+      break;
+      case 'hour':
+      show = isAuto(opts.showHr)   ? autoValue(msphr, 0, mspday * 7) : opts.showHr;
+      break;
+      case 'min':
+      show = isAuto(opts.showMin)  ? autoValue(mspmin, 0, msphr * 2) : opts.showMin;
+      break;
+      case 'sec':
+      show = isAuto(opts.showSec)  ? autoValue(mspsec, 0, mspmin * 2) : opts.showSec;
+      break;
+      case 'ms':
+      show = isAuto(opts.showMs)   ? autoValue(1, 0, mspsec * 2) : opts.showMs;
+
+      if((to.length === 0 && totalMs === 0) && opts.showZeroMs) {
+        show = true;
+      }
+
+      break;
+      default: return to;
+    }
+
+    if(!show) return to;
+
+    return (toLen > 0 ? to + opts.delimiter : to) + formatted;
   };
 
   return function (ms, opts) {
     var
     o = angular.extend({}, defaultOpts, opts),
-    dur = calcDuration(ms);
+    dur = calcDuration(ms, o),
+    nullStr = o.nullLabel;
 
     if(!dur) {
-      return '---';
-    }
-    else if(ms === 0) {
-      return formatLabel(ms, 'ms', o);
+      return nullStr;
     }
 
-    return (dur.past ? '- ' : '') + durations.reduce(function (p, c) {
-      if(!dur.hasOwnProperty(c.property)) return p;
+    var
+    past = dur.past,
+    label = durations.reduce(function (p, c) {
+      return concatLabel(p, dur[c.property] || 0, c.property, ms, o);
+    }, '');
 
-      var
-      val     = dur[c.property]||0,
-      include = (val > 0);
+    if(!label || !label.length) {
+      return nullStr;
+    }
 
-      if(!include) include = (p.length > 0 && o.showZero);
-      if(include) p.push(formatLabel(val, c.property, o));
+    label = (past ? o.pastPrefix : '') + label + (past ? o.pastSuffix : '');
 
-      return p;
-    }, []).join(o.delimiter);
+    if(!o.html) return label;
+
+    return htmlTag(o.tagWrapper, label, past ? o.classPast : null);
   };
 });
