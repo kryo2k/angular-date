@@ -580,6 +580,32 @@ angular.module('ngDate', [])
     return htmlTag(o.tagWrapper, label, past ? o.classPast : null);
   };
 })
+.filter('since', ['$date', '$filter', function ($date, $filter) {
+  var durationFilter = $filter('duration');
+  return function (date, now, durationOpts) {
+    var o = durationOpts = durationOpts || {};
+
+    if(!o.hasOwnProperty('pastPrefix')) {
+      o.pastPrefix = '';
+    }
+    if(!o.hasOwnProperty('pastSuffix')) {
+      o.pastSuffix = ' ago';
+    }
+    if(!o.hasOwnProperty('futurePrefix')) {
+      o.futurePrefix = 'in ';
+    }
+    if(!o.hasOwnProperty('futureSuffix')) {
+      o.futureSuffix = '';
+    }
+
+    var
+    dateMs = $date.ms(date),
+    nowMs = $date.ms(now),
+    diff = dateMs - nowMs;
+
+    return durationFilter(diff, durationOpts);
+  };
+}])
 .factory('DateRange', ['$date', '$filter', function ($date, $filter) {
 
   var
