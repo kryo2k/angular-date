@@ -615,7 +615,7 @@ angular.module('ngDate', [])
 .filter('since', ['$date', '$filter', function ($date, $filter) {
   var durationFilter = $filter('duration');
   return function (date, now, durationOpts) {
-    var o = durationOpts = durationOpts || {};
+    var o = angular.merge({}, durationOpts);
 
     if(!o.hasOwnProperty('pastPrefix')) {
       o.pastPrefix = '';
@@ -635,7 +635,7 @@ angular.module('ngDate', [])
     nowMs = $date.ms(now),
     diff = dateMs - nowMs;
 
-    return durationFilter(diff, durationOpts);
+    return durationFilter(diff, o);
   };
 }])
 .factory('DateRange', ['$date', '$filter', function ($date, $filter) {
