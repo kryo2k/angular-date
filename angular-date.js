@@ -577,4 +577,97 @@ angular.module('ngDate', [])
 
     return htmlTag(o.tagWrapper, label, past ? o.classPast : null);
   };
+})
+.factory('DateRange', function ($date, $filter) {
+
+  var
+  dateFilter = $filter('date');
+
+  function DateRange () {
+    var from = 0, to = $date.ms(),
+    numberTest = /^[0-9]+$/,
+    parseNumberStr = function (v) {
+      return (angular.isString(v) && numberTest.test(v)) ? parseInt(v) : v;
+    };
+
+    Object.defineProperties(this, {
+      from: {
+        get: function () { return from; },
+        set: function (v) {
+          v = parseNumberStr(v);
+
+          if($date.compare(v, to) >= 0) {
+            v = to - 1;
+          }
+
+          from = v;
+        }
+      },
+      to: {
+        get: function () { return to; },
+        set: function (v) {
+          v = parseNumberStr(v);
+
+          if($date.compare(v, from) <= 0) {
+            v = from + 1;
+          }
+
+          to = v;
+        }
+      },
+      difference: {
+        get: function () {
+          return Math.abs(to - from);
+        }
+      }
+    });
+
+    this.set = function (a, b) {
+      var aMS, bMS, arglen = arguments.length;
+
+      if(arglen === 2) {
+        aMS = $date.ms(a);
+        bMS = $date.ms(b);
+        from = Math.min(aMS, bMS);
+        to   = Math.max(aMS, bMS);
+      }
+      else if(arglen === 1) {
+        aMS = $date.ms(a);
+
+        if(aMS < from) {
+          from = aMS;
+        }
+        else if(aMS > to) {
+          to = aMS;
+        }
+      }
+
+      return this;
+    };
+
+    // init the range from arguments;
+    this.set.apply(this, arguments);
+  }
+
+  Object.defineProperties(DateRange.prototype, {
+    fromDate: {
+      get: function () { return new Date(this.from); }
+    },
+    toDate: {
+      get: function () { return new Date(this.to); }
+    }
+  });
+
+  DateRange.prototype.toString = function (format, toFormat, delimiter) {
+    delimiter = delimiter || ' to ';
+    format    = format   || 'short';
+    toFormat  = toFormat || format;
+
+    return [
+      dateFilter(this.from, format),
+      dateFilter(this.to, format)
+    ].join(delimiter);
+  };
+
+  return DateRange;
 });
