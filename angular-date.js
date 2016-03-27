@@ -615,7 +615,7 @@ angular.module('ngDate', [])
 .filter('since', ['$date', '$filter', function ($date, $filter) {
   var durationFilter = $filter('duration');
   return function (date, now, durationOpts) {
-    var o = angular.merge({}, durationOpts);
+    var o = angular.extend({}, durationOpts);
 
     if(!o.hasOwnProperty('pastPrefix')) {
       o.pastPrefix = '';
