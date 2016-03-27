@@ -288,6 +288,10 @@ angular.module('ngDate', [])
 
   // similar to this.ceil, but removes one ms from offset precision
   this.endOf = function (date, precision) {
+    if(dateKeys.ms.indexOf(String(precision||'ms').toLowerCase()) > -1) { // do not mod date
+      return this.now(date);
+    }
+
     return new Date(this.ceil(date, precision).getTime() - 1);
   };
 
