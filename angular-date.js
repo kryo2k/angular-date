@@ -364,6 +364,8 @@ angular.module('ngDate', [])
     pastSuffix:         ')',
     futurePrefix:       '',
     futureSuffix:       '',
+    nowPrefix:          '',
+    nowSuffix:          '',
     delimiter:          ' ',
     delimiterCaption:   ' ',
     showWeek:           'auto',
@@ -567,13 +569,20 @@ angular.module('ngDate', [])
     past = dur.past,
     label = durations.reduce(function (p, c) {
       return concatLabel(p, dur[c.property] || 0, c.property, ms, o);
-    }, '');
+    }, ''),
+    prefix = (past ? o.pastPrefix : o.futurePrefix),
+    suffix = (past ? o.pastSuffix : o.futureSuffix);
+
+    if(ms === 0) { // now prefix/suffix
+      prefix = o.nowPrefix;
+      suffix = o.nowSuffix;
+    }
 
     if(!label || !label.length) {
       return nullStr;
     }
 
-    label = (past ? o.pastPrefix : o.futurePrefix) + label + (past ? o.pastSuffix : o.futureSuffix);
+    label = prefix + label + suffix;
 
     if(!o.html) return label;
 
