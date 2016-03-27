@@ -578,7 +578,7 @@ angular.module('ngDate', [])
     return htmlTag(o.tagWrapper, label, past ? o.classPast : null);
   };
 })
-.factory('DateRange', function ($date, $filter) {
+.factory('DateRange', ['$date', '$filter', function ($date, $filter) {
 
   var
   dateFilter = $filter('date');
@@ -670,4 +670,4 @@ angular.module('ngDate', [])
   };
 
   return DateRange;
-});
+}]);
