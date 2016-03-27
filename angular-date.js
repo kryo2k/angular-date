@@ -362,6 +362,8 @@ angular.module('ngDate', [])
     nullLabel:          '---',
     pastPrefix:         '(',
     pastSuffix:         ')',
+    futurePrefix:       '',
+    futureSuffix:       '',
     delimiter:          ' ',
     delimiterCaption:   ' ',
     showWeek:           'auto',
@@ -571,7 +573,7 @@ angular.module('ngDate', [])
       return nullStr;
     }
 
-    label = (past ? o.pastPrefix : '') + label + (past ? o.pastSuffix : '');
+    label = (past ? o.pastPrefix : o.futurePrefix) + label + (past ? o.pastSuffix : o.futureSuffix);
 
     if(!o.html) return label;
 
