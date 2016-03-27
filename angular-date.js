@@ -292,8 +292,27 @@ angular.module('ngDate', [])
   };
 
   // strict date comparison function
-  this.compare = function (a, b) {
-    var ams = this.ms(a), bms = this.ms(b);
+  this.compare = function (a, b, precision, rounding) {
+    var
+    ams = this.ms(a),
+    bms = this.ms(b);
+
+    if(precision) {
+      var roundFn = this.round.bind(this);
+
+      if(angular.isString(rounding)) {
+        rounding = rounding.toLowerCase();
+        if(rounding === 'ceil')  roundFn = this.ceil.bind(this);
+        if(rounding === 'floor') roundFn = this.floor.bind(this);
+      }
+      else if(angular.isFunction(rounding)) {
+        roundFn = rounding;
+      }
+
+      ams = roundFn(ams, precision).getTime();
+      bms = roundFn(bms, precision).getTime();
+    }
+
     if(ams > bms) return  1;
     if(ams < bms) return -1;
     return 0;
